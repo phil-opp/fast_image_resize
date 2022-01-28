@@ -32,7 +32,7 @@ pub enum ImageRows<'a> {
     I32(Vec<&'a [I32]>),
     F32(Vec<&'a [F32]>),
     U8(Vec<&'a [U8]>),
-    U16(Vec<&'a [U16]>),
+    U16(Vec<&'a [u16]>),
 }
 
 impl<'a> ImageRows<'a> {
@@ -74,7 +74,7 @@ pub enum ImageRowsMut<'a> {
     I32(Vec<&'a mut [I32]>),
     F32(Vec<&'a mut [F32]>),
     U8(Vec<&'a mut [U8]>),
-    U16(Vec<&'a mut [U16]>),
+    U16(Vec<&'a mut [u16]>),
 }
 
 impl<'a> ImageRowsMut<'a> {
@@ -362,7 +362,7 @@ impl<'a> ImageView<'a> {
         }
     }
 
-    pub(crate) fn u16_image(&self) -> Option<TypedImageView<U16>> {
+    pub(crate) fn u16_image(&self) -> Option<TypedImageView<u16>> {
         if let ImageRows::U16(ref rows) = self.rows {
             Some(TypedImageView {
                 width: self.width,
@@ -641,7 +641,7 @@ impl<'a> ImageViewMut<'a> {
         }
     }
 
-    pub(crate) fn u16_image<'s>(&'s mut self) -> Option<TypedImageViewMut<'s, 'a, U16>> {
+    pub(crate) fn u16_image<'s>(&'s mut self) -> Option<TypedImageViewMut<'s, 'a, u16>> {
         if let ImageRowsMut::U16(rows) = &mut self.rows {
             Some(TypedImageViewMut {
                 width: self.width,

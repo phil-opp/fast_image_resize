@@ -5,7 +5,7 @@ use crate::CpuExtensions;
 
 mod native;
 
-impl Convolution for U16 {
+impl Convolution for u16 {
     fn horiz_convolution(
         src_image: TypedImageView<Self>,
         dst_image: TypedImageViewMut<Self>,

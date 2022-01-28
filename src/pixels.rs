@@ -94,3 +94,9 @@ pixel_struct!(
 pixel_struct!(I32, i32, PixelType::I32, "One `i32` component per pixel");
 pixel_struct!(F32, f32, PixelType::F32, "One `f32` component per pixel");
 pixel_struct!(U16, u16, PixelType::U16, "One `u16` component per pixel");
+
+impl Pixel for u16 {
+    fn pixel_type() -> PixelType {
+        PixelType::U16
+    }
+}

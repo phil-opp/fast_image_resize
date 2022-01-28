@@ -209,7 +209,7 @@ impl<'a> Image<'a> {
                 ImageRows::U8(pixels.chunks_exact(self.width.get() as usize).collect())
             }
             PixelType::U16 => {
-                let pixels = unsafe { buffer.align_to::<U16>().1 };
+                let pixels = unsafe { buffer.align_to::<u16>().1 };
                 ImageRows::U16(pixels.chunks_exact(self.width.get() as usize).collect())
             }
         };
@@ -248,7 +248,7 @@ impl<'a> Image<'a> {
                 ImageRowsMut::U8(pixels.chunks_exact_mut(width.get() as usize).collect())
             }
             PixelType::U16 => {
-                let pixels = unsafe { buffer.align_to_mut::<U16>().1 };
+                let pixels = unsafe { buffer.align_to_mut::<u16>().1 };
                 ImageRowsMut::U16(pixels.chunks_exact_mut(width.get() as usize).collect())
             }
         };

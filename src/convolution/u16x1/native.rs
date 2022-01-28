@@ -1,11 +1,10 @@
 use crate::convolution::{optimisations, Coefficients};
 use crate::image_view::{TypedImageView, TypedImageViewMut};
-use crate::pixels::U16;
 
 #[inline(always)]
 pub(crate) fn horiz_convolution(
-    src_image: TypedImageView<U16>,
-    mut dst_image: TypedImageViewMut<U16>,
+    src_image: TypedImageView<u16>,
+    mut dst_image: TypedImageViewMut<u16>,
     offset: u32,
     coeffs: Coefficients,
 ) {
@@ -26,17 +25,17 @@ pub(crate) fn horiz_convolution(
             let mut ss = initial;
             let src_pixels = unsafe { src_row.get_unchecked(first_x_src..) };
             for (&k, &src_pixel) in ks.iter().zip(src_pixels) {
-                ss += src_pixel.0 as i64 * (k as i64);
+                ss += src_pixel as i64 * (k as i64);
             }
-            dst_pixel.0 = normalizer_guard.clip(ss);
+            *dst_pixel = normalizer_guard.clip(ss);
         }
     }
 }
 
 #[inline(always)]
 pub(crate) fn vert_convolution(
-    src_image: TypedImageView<U16>,
-    mut dst_image: TypedImageViewMut<U16>,
+    src_image: TypedImageView<u16>,
+    mut dst_image: TypedImageViewMut<u16>,
     coeffs: Coefficients,
 ) {
     let (values, window_size, bounds) = (coeffs.values, coeffs.window_size, coeffs.bounds);
@@ -56,9 +55,9 @@ pub(crate) fn vert_convolution(
             let src_rows = src_image.iter_rows(first_y_src);
             for (&k, src_row) in ks.iter().zip(src_rows) {
                 let src_pixel = unsafe { src_row.get_unchecked(x_src as usize) };
-                ss += src_pixel.0 as i64 * (k as i64);
+                ss += *src_pixel as i64 * (k as i64);
             }
-            dst_pixel.0 = normalizer_guard.clip(ss);
+            *dst_pixel = normalizer_guard.clip(ss);
         }
     }
 }
