@@ -262,6 +262,14 @@ impl<'a> Image<'a> {
             _ => None,
         }
     }
+
+    pub fn into_vec_u16(self) -> Option<Vec<u16>> {
+        match self.pixels {
+            PixelsContainer::MutU16(slice) => Some(slice.to_owned()),
+            PixelsContainer::VecU16(vec) => Some(vec),
+            _ => None,
+        }
+    }
 }
 
 /// Generic image container for internal purposes.
