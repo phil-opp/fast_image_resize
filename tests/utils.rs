@@ -27,6 +27,7 @@ pub trait PixelExt: Pixel {
     fn pixel_type_str() -> &'static str {
         match Self::pixel_type() {
             PixelType::U8 => "u8",
+            PixelType::U16 => "u16",
             PixelType::U8x3 => "u8x3",
             PixelType::U8x4 => "u8x4",
             PixelType::U16x3 => "u16x3",

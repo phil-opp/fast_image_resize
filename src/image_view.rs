@@ -2,7 +2,7 @@ use std::num::NonZeroU32;
 use std::slice;
 
 use crate::errors::{CropBoxError, ImageBufferError, ImageRowsError};
-use crate::pixels::{Pixel, PixelType, U16x3, U8x3, U8x4, F32, I32, U8};
+use crate::pixels::{Pixel, PixelType, U16x3, U8x3, U8x4, F32, I32, U16, U8};
 
 pub(crate) type RowMut<'a, 'b, T> = &'a mut &'b mut [T];
 pub(crate) type TwoRows<'a, T> = (&'a [T], &'a [T]);
@@ -32,6 +32,7 @@ pub enum ImageRows<'a> {
     I32(Vec<&'a [I32]>),
     F32(Vec<&'a [F32]>),
     U8(Vec<&'a [U8]>),
+    U16(Vec<&'a [U16]>),
 }
 
 impl<'a> ImageRows<'a> {
@@ -47,6 +48,7 @@ impl<'a> ImageRows<'a> {
             ImageRows::I32(rows) => check_rows_count_and_size(width, height, rows),
             ImageRows::F32(rows) => check_rows_count_and_size(width, height, rows),
             ImageRows::U8(rows) => check_rows_count_and_size(width, height, rows),
+            ImageRows::U16(rows) => check_rows_count_and_size(width, height, rows),
         }
     }
 
@@ -58,6 +60,7 @@ impl<'a> ImageRows<'a> {
             Self::I32(_) => PixelType::I32,
             Self::F32(_) => PixelType::F32,
             Self::U8(_) => PixelType::U8,
+            Self::U16(_) => PixelType::U16,
         }
     }
 }
@@ -71,6 +74,7 @@ pub enum ImageRowsMut<'a> {
     I32(Vec<&'a mut [I32]>),
     F32(Vec<&'a mut [F32]>),
     U8(Vec<&'a mut [U8]>),
+    U16(Vec<&'a mut [U16]>),
 }
 
 impl<'a> ImageRowsMut<'a> {
@@ -86,6 +90,7 @@ impl<'a> ImageRowsMut<'a> {
             Self::I32(rows) => check_rows_count_and_size(width, height, rows),
             Self::F32(rows) => check_rows_count_and_size(width, height, rows),
             Self::U8(rows) => check_rows_count_and_size(width, height, rows),
+            Self::U16(rows) => check_rows_count_and_size(width, height, rows),
         }
     }
 
@@ -97,6 +102,7 @@ impl<'a> ImageRowsMut<'a> {
             Self::I32(_) => PixelType::I32,
             Self::F32(_) => PixelType::F32,
             Self::U8(_) => PixelType::U8,
+            Self::U16(_) => PixelType::U16,
         }
     }
 }
@@ -164,6 +170,10 @@ impl<'a> ImageView<'a> {
             PixelType::U8 => {
                 let pixels = align_buffer_to(buffer)?;
                 ImageRows::U8(pixels.chunks_exact(width.get() as usize).collect())
+            }
+            PixelType::U16 => {
+                let pixels = align_buffer_to(buffer)?;
+                ImageRows::U16(pixels.chunks_exact(width.get() as usize).collect())
             }
         };
         Ok(Self {
@@ -351,6 +361,19 @@ impl<'a> ImageView<'a> {
             None
         }
     }
+
+    pub(crate) fn u16_image(&self) -> Option<TypedImageView<U16>> {
+        if let ImageRows::U16(ref rows) = self.rows {
+            Some(TypedImageView {
+                width: self.width,
+                height: self.height,
+                crop_box: self.crop_box,
+                rows,
+            })
+        } else {
+            None
+        }
+    }
 }
 
 /// Generic immutable image view.
@@ -519,6 +542,10 @@ impl<'a> ImageViewMut<'a> {
                 let pixels = align_buffer_to_mut(buffer)?;
                 ImageRowsMut::U8(pixels.chunks_exact_mut(width.get() as usize).collect())
             }
+            PixelType::U16 => {
+                let pixels = align_buffer_to_mut(buffer)?;
+                ImageRowsMut::U16(pixels.chunks_exact_mut(width.get() as usize).collect())
+            }
         };
         Ok(Self {
             width,
@@ -604,6 +631,18 @@ impl<'a> ImageViewMut<'a> {
 
     pub(crate) fn u8_image<'s>(&'s mut self) -> Option<TypedImageViewMut<'s, 'a, U8>> {
         if let ImageRowsMut::U8(rows) = &mut self.rows {
+            Some(TypedImageViewMut {
+                width: self.width,
+                height: self.height,
+                rows,
+            })
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn u16_image<'s>(&'s mut self) -> Option<TypedImageViewMut<'s, 'a, U16>> {
+        if let ImageRowsMut::U16(rows) = &mut self.rows {
             Some(TypedImageViewMut {
                 width: self.width,
                 height: self.height,

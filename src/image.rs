@@ -1,15 +1,17 @@
 use std::num::NonZeroU32;
 
 use crate::image_view::{ImageRows, ImageRowsMut, TypedImageView, TypedImageViewMut};
-use crate::pixels::{Pixel, PixelType, U16x3, U8x3, U8x4, F32, I32, U8};
+use crate::pixels::{Pixel, PixelType, U16x3, U8x3, U8x4, F32, I32, U16, U8};
 use crate::{ImageBufferError, ImageView, ImageViewMut, InvalidBufferSizeError};
 
 #[derive(Debug)]
 enum PixelsContainer<'a> {
     MutU32(&'a mut [u32]),
+    MutU16(&'a mut [u16]),
     MutU8(&'a mut [u8]),
     VecU32(Vec<u32>),
     VecU8(Vec<u8>),
+    VecU16(Vec<u16>),
 }
 
 /// Simple image container.
@@ -32,6 +34,7 @@ impl<'a> Image<'a> {
                 PixelsContainer::VecU32(vec![0; pixels_count])
             }
             PixelType::U8 => PixelsContainer::VecU8(vec![0; pixels_count]),
+            PixelType::U16 => PixelsContainer::VecU16(vec![0; pixels_count]),
         };
         Self {
             width,
@@ -98,6 +101,24 @@ impl<'a> Image<'a> {
         })
     }
 
+    pub fn from_slice_u16(
+        width: NonZeroU32,
+        height: NonZeroU32,
+        buffer: &'a mut [u16],
+        pixel_type: PixelType,
+    ) -> Result<Self, InvalidBufferSizeError> {
+        let size = (width.get() * height.get()) as usize;
+        if buffer.len() != size {
+            return Err(InvalidBufferSizeError);
+        }
+        Ok(Self {
+            width,
+            height,
+            pixels: PixelsContainer::MutU16(buffer),
+            pixel_type,
+        })
+    }
+
     pub fn from_slice_u8(
         width: NonZeroU32,
         height: NonZeroU32,
@@ -139,9 +160,11 @@ impl<'a> Image<'a> {
     pub fn buffer(&self) -> &[u8] {
         match &self.pixels {
             PixelsContainer::MutU32(p) => unsafe { p.align_to::<u8>().1 },
+            PixelsContainer::MutU16(p) => unsafe { p.align_to::<u8>().1 },
             PixelsContainer::MutU8(p) => *p,
             PixelsContainer::VecU32(v) => unsafe { v.align_to::<u8>().1 },
             PixelsContainer::VecU8(v) => v,
+            PixelsContainer::VecU16(v) => unsafe { v.align_to::<u8>().1 },
         }
     }
 
@@ -149,8 +172,10 @@ impl<'a> Image<'a> {
     fn buffer_mut(&mut self) -> &mut [u8] {
         match &mut self.pixels {
             PixelsContainer::MutU32(p) => unsafe { p.align_to_mut::<u8>().1 },
+            PixelsContainer::MutU16(p) => unsafe { p.align_to_mut::<u8>().1 },
             PixelsContainer::MutU8(p) => p,
             PixelsContainer::VecU32(ref mut v) => unsafe { v.align_to_mut::<u8>().1 },
+            PixelsContainer::VecU16(ref mut v) => unsafe { v.align_to_mut::<u8>().1 },
             PixelsContainer::VecU8(ref mut v) => v.as_mut_slice(),
         }
     }
@@ -182,6 +207,10 @@ impl<'a> Image<'a> {
             PixelType::U8 => {
                 let pixels = unsafe { buffer.align_to::<U8>().1 };
                 ImageRows::U8(pixels.chunks_exact(self.width.get() as usize).collect())
+            }
+            PixelType::U16 => {
+                let pixels = unsafe { buffer.align_to::<U16>().1 };
+                ImageRows::U16(pixels.chunks_exact(self.width.get() as usize).collect())
             }
         };
         ImageView::new(self.width, self.height, rows).unwrap()
@@ -217,6 +246,10 @@ impl<'a> Image<'a> {
             PixelType::U8 => {
                 let pixels = unsafe { buffer.align_to_mut::<U8>().1 };
                 ImageRowsMut::U8(pixels.chunks_exact_mut(width.get() as usize).collect())
+            }
+            PixelType::U16 => {
+                let pixels = unsafe { buffer.align_to_mut::<U16>().1 };
+                ImageRowsMut::U16(pixels.chunks_exact_mut(width.get() as usize).collect())
             }
         };
         ImageViewMut::new(width, height, rows).unwrap()
