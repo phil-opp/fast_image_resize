@@ -254,6 +254,14 @@ impl<'a> Image<'a> {
         };
         ImageViewMut::new(width, height, rows).unwrap()
     }
+
+    pub fn as_slice_u16(&self) -> Option<&[u16]> {
+        match &self.pixels {
+            PixelsContainer::MutU16(slice) => Some(slice),
+            PixelsContainer::VecU16(vec) => Some(vec.as_slice()),
+            _ => None,
+        }
+    }
 }
 
 /// Generic image container for internal purposes.
